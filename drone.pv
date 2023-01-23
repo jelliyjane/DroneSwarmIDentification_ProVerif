@@ -32,29 +32,15 @@ query attacker(gk).
 
 event acceptDrone(bitstring).
 event termDrone(bitstring).
-event acceptRDrone(bitstring,ec_pkey).
-event termRDrone(bitstring,ec_pkey).
 
-query x:bitstring; inj-event(termDrone(x))==>inj-event(acceptDrone(x)).
-query x:bitstring, y:ec_pkey; inj-event(termRDrone(x,y))==>inj-event(acceptRDrone(x,y)).
+query x:bitstring, y:key;inj-event(termDrone(x))==>inj-event(acceptDrone(x,y)).
 
 let drone(id_D:bitstring,id_R:bitstring, A:ec_pkey,r:ec_skey,pkR:ec_pkey,skD:ec_skey) =
     let mac = mac_h(gk,A,id_D,pkR) in
-    out(c, (id_D, A, mac));
-    event acceptDrone(mac);
-    in(c, msg2:bitstring);
-    let (T:ec_pkey, =id_R, =A) = sdec(msg2, gk) in
-    event termRDrone(id_R, A);
-    out(c,ECAdd(ECMul(h(gk,T), ec_pkey_to_b(A)),ECMul(ec_skey_to_b(skD),ec_pkey_to_b(T)))).
+    out(c, (id_D, A, mac)).
     
-let reader(id_D:bitstring, id_R:bitstring, A:ec_pkey,pkR:ec_pkey,T:ec_pkey) =
-    in(c, msg1:bitstring);
-    let(=id_D, A: ec_pkey, mac:bitstring) = msg1 in
-    let(=mac_h(gk,A,id_D,pkR)) = mac in
-    event termDrone(mac);
-    out(c, senc((T,id_R,A),gk));
-    event acceptRDrone(id_R,A);
-    in(c, B:bitstring).
+let reader(id_D:bitstring, id_R:bitstring, pkR:ec_pkey,T:ec_pkey) =
+    in(c, (id_D:bitstring, A:ec_pkey, mac:bitstring)).
 
 process
     new id_D:bitstring;
@@ -64,6 +50,5 @@ process
     new T:ec_pkey;
     new r:ec_skey;
     new skD:ec_skey;
-    new gk:key;
     
-    ((!drone(id_D,id_R,A,r,pkR,skD))|(!reader(id_D,id_R,A,pkR,T)))
+    ((!drone(id_D,id_R,A,r,pkR,skD))|(!reader(id_D,id_R,pkR,T)))
