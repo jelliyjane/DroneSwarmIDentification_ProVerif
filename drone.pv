@@ -28,13 +28,15 @@ fun ECAdd(bitstring, bitstring): bitstring.
 const P:bitstring.
 free c:channel.
 free gk:key [private].
-query attacker(gk).
 
+(* events *)
 event acceptDrone(bitstring).
 event termDrone(bitstring).
 event sendT(key).
 event receiveT(ec_pkey).
 
+(* queries *)
+query attacker(gk).
 query x:bitstring;event(termDrone(x))==>event(acceptDrone(x)).
 query x:ec_pkey, y:key;event(receiveT(x))==>event(sendT(y)).
 
